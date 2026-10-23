@@ -49,7 +49,7 @@ IcebergRESTCatalogWarehouseCredential IcebergRESTCatalogWarehouseCredential::fro
 
 Poco::JSON::Object::Ptr IcebergRESTCatalogWarehouseCredential::toJSON() const
 {
-    Poco::JSON::Object::Ptr json = new Poco::JSON::Object(Poco::JSON_PRESERVE_KEY_ORDER);
+    Poco::JSON::Object::Ptr json = new Poco::JSON::Object;
     json->set("type", TYPE_AWS_ROLE);
     json->set("role_arn", role_arn);
     if (!external_id.empty())
@@ -75,7 +75,7 @@ IcebergRESTCatalogWarehouseDefinition IcebergRESTCatalogWarehouseDefinition::fro
 
 String IcebergRESTCatalogWarehouseDefinition::toKeeperData() const
 {
-    Poco::JSON::Object json(Poco::JSON_PRESERVE_KEY_ORDER);
+    Poco::JSON::Object json;
     json.set("format", FORMAT);
     json.set("base_location", base_location);
     json.set("credential", credential.toJSON());

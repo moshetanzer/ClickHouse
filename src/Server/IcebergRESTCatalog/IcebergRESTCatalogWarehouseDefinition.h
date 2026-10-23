@@ -7,7 +7,7 @@
 namespace DB
 {
 
-/// IAM role that the server assumes to access the warehouse storage. No long-lived key is stored.
+/// IAM role that the server assumes to access the warehouse storage.
 struct IcebergRESTCatalogWarehouseCredential
 {
     static constexpr auto TYPE_AWS_ROLE = "aws_role";
@@ -28,7 +28,7 @@ struct IcebergRESTCatalogWarehouseDefinition
     String base_location;
     IcebergRESTCatalogWarehouseCredential credential;
 
-    /// Shape of the create request of the management API, minus `name`.
+    /// Parses `{"base_location": "s3://...", "credential": {...}}`. Other keys, such as `name`, are ignored.
     static IcebergRESTCatalogWarehouseDefinition fromJSON(const Poco::JSON::Object & json);
 
     /// Data of the warehouse root node: the JSON above plus a `format` field.

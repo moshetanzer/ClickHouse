@@ -28,6 +28,7 @@ private:
     {
         IcebergRESTCatalogWarehousePtr warehouse;
         /// Last modification of the root node the object was built from.
+        /// Not `version`, because `version` restarts when the warehouse is dropped and created again.
         Int64 mzxid = 0;
     };
 
