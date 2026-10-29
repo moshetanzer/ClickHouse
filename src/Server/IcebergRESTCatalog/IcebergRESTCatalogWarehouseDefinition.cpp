@@ -16,8 +16,8 @@ namespace ErrorCodes
 namespace
 {
 
-/// Bump on any layout change so old data is refused, not misread.
-constexpr auto FORMAT = "IcebergRESTCatalog\nformat_version: 2";
+/// Bump on any layout change so data of another layout is refused, not misread.
+constexpr Int64 FORMAT_VERSION = 2;
 
 String getRequiredString(const Poco::JSON::Object & json, const String & key)
 {
@@ -76,7 +76,7 @@ IcebergRESTCatalogWarehouseDefinition IcebergRESTCatalogWarehouseDefinition::fro
 String IcebergRESTCatalogWarehouseDefinition::toKeeperData() const
 {
     Poco::JSON::Object json;
-    json.set("format", FORMAT);
+    json.set("format_version", FORMAT_VERSION);
     json.set("base_location", base_location);
     json.set("credential", credential.toJSON());
     return toJSONString(json);
@@ -87,9 +87,9 @@ IcebergRESTCatalogWarehouseDefinition IcebergRESTCatalogWarehouseDefinition::fro
     const auto what = fmt::format("Warehouse definition at {}", path);
     const auto json = parseJSONObject(data, what);
 
-    const auto format = json->optValue<String>("format", "");
-    if (format != FORMAT)
-        throw Exception(ErrorCodes::INCORRECT_DATA, "{} has an unsupported format: expected {}, found {}", what, FORMAT, format);
+    const auto format_version = json->optValue<Int64>("format_version", 0);
+    if (format_version != FORMAT_VERSION)
+        throw Exception(ErrorCodes::INCORRECT_DATA, "{} has an unsupported format version: expected {}, found {}", what, FORMAT_VERSION, format_version);
 
     return fromJSON(*json);
 }

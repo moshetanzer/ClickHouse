@@ -68,7 +68,7 @@ CATALOG_PORT = 8182
 CATALOG_SECURE_PORT = 8183
 KEEPER_PARENT = "/clickhouse/iceberg_rest_catalog"
 KEEPER_ROOT = f"{KEEPER_PARENT}/my_warehouse"
-FORMAT = "IcebergRESTCatalog\nformat_version: 2"
+FORMAT_VERSION = 2
 BUCKET = "warehouse"
 BASE_LOCATION = f"s3://{BUCKET}/my_warehouse"
 ROLE_SESSION_NAME = "miniorole"
@@ -104,7 +104,7 @@ def wait_catalog_ready(timeout=60, instance=None):
 
 
 def warehouse_definition(base_location, credential=CREDENTIAL):
-    return {"format": FORMAT, "base_location": base_location, "credential": credential}
+    return {"format_version": FORMAT_VERSION, "base_location": base_location, "credential": credential}
 
 
 # TODO: Replace with `POST /management/v1/warehouses` when the management API lands.
@@ -921,15 +921,14 @@ def test_slash_at_name_edge_does_not_retarget(started_cluster):
 def test_unsupported_format_is_refused(started_cluster):
     zk = get_keeper()
     definition = warehouse_definition(BASE_LOCATION)
-    zk.set(KEEPER_ROOT, json.dumps({**definition, "format": "IcebergRESTCatalog\nformat_version: 999"}).encode())
+    zk.set(KEEPER_ROOT, json.dumps({**definition, "format_version": 999}).encode())
     try:
-        # The definition is re-read when the node changes, no restart needed.
         for _ in range(2):
             response = catalog_request(
                 "GET", "/v1/my_warehouse/namespaces", expected_code=500
             )
             assert_error_shape(response, "InternalServerError")
-        assert node.contains_in_log("has an unsupported format")
+        assert node.contains_in_log("has an unsupported format version")
     finally:
         zk.set(KEEPER_ROOT, json.dumps(definition).encode())
 
@@ -973,8 +972,8 @@ def test_warehouse_role_is_used(started_cluster):
 
 
 def test_bucket_root_base_location(started_cluster):
-    # The warehouse of node_aux has `s3://warehouse/` as the base location, the bucket root with a trailing slash.
-    # Tables land directly under the bucket.
+    # The warehouse of node_aux has a base location of `s3://warehouse/`.
+    # Verify that for a bucket root with a trailing slash, tables land directly under the bucket, with no extra slash.
     ns = f"root_{uuid.uuid4().hex[:8]}"
     ns_url = catalog_url("/v1/my_warehouse/namespaces", node_aux)
     assert requests.post(ns_url, json={"namespace": [ns]}).status_code == 200
